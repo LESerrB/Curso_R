@@ -1,0 +1,81 @@
+---
+title: "Regresión LS"
+author: "Luis Esteban"
+date: "14/3/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+__Importar Datos__
+
+```{r,warning=FALSE,include=FALSE}
+library(readxl)
+library(tseries)
+Encuesta <- read_excel("Encuesta.xlsx")
+View(Encuesta)
+names(Encuesta)
+length(Encuesta$promact)
+```
+# Promedio Actual vs Promedio Bachillerato
+Análisis de Variables
+
+## Promedio Actual
+```{r}
+mean(Encuesta$promact)
+sd(Encuesta$promact)
+max(Encuesta$promact)
+min(Encuesta$promact)
+hist(Encuesta$promact)
+```
+
+## Promedio Bachillerato
+```{r}
+mean(Encuesta$prombach)
+sd(Encuesta$prombach)
+max(Encuesta$prombach)
+min(Encuesta$prombach)
+hist(Encuesta$prombach)
+```
+
+```{r}
+plot(Encuesta$promact~Encuesta$prombach,xlim=c(5,10),ylim=c(5,10))
+cor(Encuesta$promact,Encuesta$prombach)
+```
+
+# Modelo
+
+```{r}
+ml1 <- lm(promact~prombach, data = Encuesta)
+plot(Encuesta$promact~Encuesta$prombach,xlim=c(0,10),ylim=c(0,10))
+abline(ml1)
+```
+
+## Valores del modelo
+```{r}
+sml1 <- summary(ml1)
+plot(sml1$residuals)
+hist(sml1$residuals)
+jbml1 <- jarque.bera.test(sml1$residuals)
+jbml1$p.value
+```
+
+$H_0:$ Los errores son normales
+
+$H_A:$ Los errores no son normales
+
+Como el valor __P =__ `r jbml1$p.value` es mayor  al valor de $\alpha=0.05$, no existe suficiente evidencia para rechazar $H_0$
+
+# Modelo Lineal Múltiple
+
+```{r}
+mlm1 <- lm(promact~., data=Encuesta)
+smlm1 <- summary(mlm1)
+jbsmlm1 <- jarque.bera.test(smlm1$residuals)
+smlm1
+```
+
