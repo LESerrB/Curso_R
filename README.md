@@ -1,3 +1,3 @@
-# Curso_R
+# Curso R
 
 Curso sobre data science con R
