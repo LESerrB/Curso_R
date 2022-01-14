@@ -2,7 +2,7 @@
 
 Curso sobre data science con R
 
-👀 Notas para las instalaciones:
+Notas para las instalaciones:
 
 - Hay que instalar `R` y luego `RStudio` en orden
 - Aquellos que tengan Mac deben tenerlo actualizado a la versión **OSX 10.12 o mayor**
