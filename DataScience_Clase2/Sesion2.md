@@ -1,4 +1,4 @@
-# **Estadistica en R**
+# **2. Estadistica en R**
 
 ## **Bibliografía y referencias**
 
