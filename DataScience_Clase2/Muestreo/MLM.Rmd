@@ -1,0 +1,111 @@
+---
+title: "Regresión LM"
+author: "Curso R"
+date: "13 de marzo de 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Regresión Lineal Múltiple
+
+El modelo es el siguiente:
+
+$$y_i=\hat{\beta}_1+\hat{\beta}_2*x_{i2}+...+\hat{\beta}_kx_{ik}+\hat{\epsilon}_i$$
+
+Representado en forma de vetor y matriz es la siguiente:
+
+$$y=\begin{pmatrix}
+y_1\\ 
+y_2\\
+.\\
+.\\
+.\\
+y_n\\ 
+\end{pmatrix}$$
+
+$$x=\begin{pmatrix}
+ 1& x_{i1} &...  &x_{k1} \\ 
+ 1& x_{i2} &...  & x_{k1}\\ 
+ .&  .&  ...& .\\ 
+ .&  .&  ...& .\\
+ .&  .&  ...& .\\
+ 1&  x_{in}& ... &x_{k1} 
+\end{pmatrix}$$
+
+$$\beta=\begin{pmatrix}
+\beta_1\\ 
+\beta_2\\
+.\\
+.\\
+.\\
+\beta_k\\ 
+\end{pmatrix}$$
+
+$$\epsilon=\begin{pmatrix}
+\epsilon_1\\ 
+\epsilon_2\\
+.\\
+.\\
+.\\
+\epsilon_n\\ 
+\end{pmatrix}$$
+
+De forma simplificada tenemos
+
+$$\underline{y}=\mathbf{X} \underline{\beta}+ \underline{\epsilon}$$
+
+En este caso lo que se debe minimizar es la siguiente función:
+
+$$min_{\underline{\beta}}\underline{\epsilon}´\underline{\epsilon}$$
+
+Lo que da como resultado
+
+$$\underline{\beta}=(\mathbf{X}´\mathbf{X})^{-1}\mathbf{X}´\underline{y}$$
+
+__Caso Práctico__
+
+Del ejemplo para el modelo de regresión lineal simple, ahora se agrargará la variable género.
+
+```{r}
+
+table(Encuesta$sexo)
+hist(Encuesta$sexo)
+
+```
+
+```{r}
+
+mlm<-lm(promact~prombach+sexo, data=Encuesta)
+
+```
+
+Se analiza normalidad en los errores
+
+```{r}
+
+plot(mlm$residuals)
+plot((mlm$residuals-mean(mlm$residuals))/sd(mlm$residuals))
+jarque.bera.test(mlm$residuals)
+
+```
+
+Análisis completo
+
+```{r}
+
+smlm<-summary(mlm)
+smlm
+
+```
+
+Tanto el estadísico F como el t son significativos, el coeficiente de determinación ajustado es de 35.23% y el modelo es el siguiente 
+
+```{r}
+
+mlm$coefficients
+
+```
+

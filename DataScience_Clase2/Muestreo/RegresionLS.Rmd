@@ -1,0 +1,294 @@
+---
+title: "Regresión LS"
+author: 'Curso R'
+date: "11 de marzo de 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,include=FALSE}
+
+library(tseries)
+
+```
+
+
+#Regresión lineal simple
+
+Estos modelos suponen relaciones causales de una variable explicativa sobre una variable explicada las cuales pueden ser relacionadas con la siguiente expresión:
+
+$$y_i=\beta_1+\beta_2x_i+\epsilon_i$$
+En este caso se pueden estimar los coeficientes de las betas a través de una muestra de los valores de __*y*__ y de __*x*__
+
+$$\hat{y}_i=\hat{\beta}_1+\hat{\beta}_2x_i$$
+
+De tal forma que
+
+$$y_i=\hat{y}_i+\hat{\epsilon}_i$$
+
+Finalmente
+
+$$y_i=\hat{\beta}_1+\hat{\beta}_2x_i+\hat{\epsilon}_i$$
+
+Lo que se plantea en la práctica es 
+
+$$min_{\hat{\beta}_1,~\hat{\beta_2}}\sum\hat{\epsilon}^2$$
+
+Lo que da como resultado
+
+$$\hat{\beta}_2=\frac{n\sum x_iy_i-\sum x_i\sum y_i}{n\sum x_i^2-(\sum x_i)^2}$$
+
+$$\hat{\beta}_1=\bar{y}+\hat{\beta}_2\bar{x}$$
+
+Ejemplo empírico
+
+```{r}
+
+fac<-1.5
+xi1<-rep(c(1:10), each=5)
+yi1<-xi1+rnorm(50)*fac
+
+plot(yi1~xi1, xlim=c(0,10), ylim=c(0,12))
+
+ml1<-lm(yi1~xi1)
+abline(ml1)
+
+
+```
+
+Si deseamos saber cuánto valen $\hat{\beta}_1=$ `r ml1$coefficients[1]` y $\hat{\beta}_2=$ `r ml1$coefficients[2]` 
+
+Para una segunda muestra con el mismo tamaño, estos serían los resultados
+
+```{r}
+
+xi2<-rep(c(1:10), each=5)
+yi2<-xi2+rnorm(50)*fac
+
+plot(yi2~xi2, xlim=c(0,10), ylim=c(0,12))
+
+ml2<-lm(yi2~xi2)
+abline(ml2)
+
+
+```
+
+Si deseamos saber cuánto valen $\hat{\beta}_1=$ `r ml2$coefficients[1]` y $\hat{\beta}_2=$ `r ml2$coefficients[2]` 
+
+Comparando
+
+```{r}
+
+plot(yi1~xi1, col = "red", lwd = 2, pch=1)
+points(yi2~xi2, col = "blue", lwd = 2, pch=3)
+abline(ml1, col="red")
+abline(ml2, col="blue")
+
+```
+
+En realidad la recta poblacional sería:
+
+
+
+```{r}
+
+plot(yi1~xi1, col = "red", lwd = 2, pch=1)
+points(yi2~xi2, col = "blue", lwd = 2, pch=3)
+abline(ml1, col="red")
+abline(ml2, col="blue")
+lines(c(1:10)~c(1:10))
+
+```
+
+Se puede apreciar una sobrestimación y subestimación de las rectas muestrales comparadas con la poblacional.
+
+##Análisis estadístico del modelo ml1
+
+```{r}
+
+sml1<-summary(ml1)
+sml1
+
+```
+
+__Normalidad en los errores estimados__
+
+Antes de iniciar las pruebas de hipótesis pertinentes, se debe realizar la prueba de normalidad en los errores.
+
+```{r}
+
+er<-sml1$residuals
+plot(er)
+
+```
+
+Estandarización de los errores
+
+```{r}
+
+zer<-(er-mean(er))/sd(er) 
+plot(zer)
+
+```
+
+Prueba de normalidad
+
+```{r}
+
+jarque.bera.test(zer)
+
+```
+
+Como se puede apreciar el valor __P__ del estadístico de la prueba proporciona suficiente evidencia para no rechazar normalidad en los errores. 
+
+__Estadístico F__
+
+El estadístico de F de Fisher sirve para probar las siguientes hipótesis:
+
+$H_0:~\beta_1=\beta_2=0$
+
+$H_A:~Alguna~\beta_i\neq0$
+
+```{r}
+
+Fish<-pf(sml1$fstatistic[1],sml1$fstatistic[2],sml1$fstatistic[3],lower.tail = F)
+
+```
+
+
+Para el ejemplo en cuestión la el valor __P__ de la _F de Fisher_ es de `r Fish`, por lo que existe suficiente evidencia para rechazar $H_0$
+
+__¿Qué pasa si es la $\beta_1$ la que es diferente de cero?__
+
+
+__Estadístico t de estudent__
+
+En este caso se plantean las hipótesis individuales para cada coeficiente beta estimado.
+
+$H_0:~\beta_1=0$
+
+$H_A:~\beta_1\neq0$
+
+y
+
+$H_0:~\beta_2=0$
+
+$H_A:~\beta_2\neq0$
+
+```{r}
+
+sml1$coef
+
+```
+
+En este caso se observa que el valor __P__ `r sml1$coefficients[1,4]` para la $\beta_1$ es mayor que un nivel de significancia propuesto del 0.05 por lo que o existe evidencia para rechazar $H_0$, caso contrario a $\beta_2$ en el cual el valor __P__`r sml1$coefficients[2,4]` es menor, por lo que existe suficiente evidencia para rechazar $H_0$
+
+__Coeficiente de determinación ajustado__
+
+```{r}
+
+sml1$adj.r.squared
+
+```
+
+En este caso el coeficiente es de 74.46%, lo que indica que el 74.75% de la variación en __y__ es explicado por un incremento en __x__ el resto, el 25.54% se debe al componente aleatorio.
+
+__Coeficientes del Modelo__
+
+```{r}
+
+ml1$coefficients
+
+```
+
+#Ejemplo Práctico
+
+```{r, warning=FALSE}
+
+library(readxl)
+Encuesta <- read_excel("Encuesta.xlsx")
+View(Encuesta)
+
+```
+
+Estos son datos de las calificaciones de alumnos a nivel bachillerato y sus calificaciones obtenidas a nivel licenciatura al momento de la encuesta, la idea es demostrar si las calificaciones de su licenciatura es una variable causada por las calificaciones obtenidas en el bachillerato
+
+```{r}
+
+table(Encuesta$promact)
+
+hist(Encuesta$promact)
+
+table(Encuesta$prombach)
+
+hist(Encuesta$prombach)
+
+cor(Encuesta$promact, Encuesta$prombach)
+
+
+
+```
+
+Se ejecuta el modelo
+
+```{r}
+
+plot(Encuesta$promact~Encuesta$prombach, 
+     xlim=c(5,10), ylim=c(5,10))
+
+mlc<-lm(promact~prombach, data=Encuesta)
+
+plot(Encuesta$promact~Encuesta$prombach, 
+     xlim=c(0,10), ylim=c(0,10))
+abline(mlc)
+
+smlc<-summary(mlc)
+
+
+```
+
+Se aplica prueba de normalidad a los errores
+
+```{r}
+
+plot(smlc$residuals)
+
+plot((smlc$residuals-mean(smlc$residuals))/sd(smlc$residuals))
+
+jarque.bera.test(smlc$residuals) 
+
+```
+
+Los errores son normales
+
+Se procede  a la interpretación
+
+```{r}
+
+smlc
+
+```
+
+El valor __P__ del estadístico __F__ de _Fisher_ es menor que $\alpha$ por lo que alguna de las betas es diferente de cero.
+
+El valor __P__ de los estádisticos __t__ de _Student_ son menores a $\alpha$, por lo que tanto la pendiente y la orenada al origen son esta´siticamnete diferentes de cero.
+
+El coeficiente de determinación es 0.3372, con lo que podemos decir que el 33.72% de la variación en la calificación a nivel licenciatura se debe a un incrementi en su calificación de su bachillerato, el resto es explicado por eventos aletorios.
+
+El modelo lineal es el siguiente:
+
+$$\hat{PLic}=3.75+.52*PBach$$
+
+En el caso de que el estudiante tenga un promedio de 7 en el bachillerato, su promedio esperado en la licenciatura será 
+
+```{r}
+
+Bach<-7
+Lic<-3.75+.52*Bach
+Lic
+
+```
+

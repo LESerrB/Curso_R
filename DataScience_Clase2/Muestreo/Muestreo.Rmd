@@ -1,0 +1,316 @@
+---
+title: "Muestro"
+author: 'CURSO R'
+date: "10 de marzo de 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Distribución Muestral
+
+```{r}
+
+library(tseries)
+
+```
+
+
+El siguiente ejemplo permitirá entender de forma práctica el concepto de distribución muestral.
+
+Supongamos que tenemos una distribución de la que desconocemos su función de distribución y sus parámetros relevantes, sin embargo sabemos que tiene una y desviación estándar asociadas, supongamos que dicha distribución es una rectangular continua con valor a=10, b=20.
+
+__Distribución Rectangular__
+
+```{r}
+
+unifor<-runif(100000,10,50)
+#plot(unifor)
+hist(unifor)
+munif<-mean(unifor)
+sdunif<-sd(unifor)
+
+```
+
+Con media $\mu=$ `r munif` y desviación estándar $\sigma=$ `r sdunif`
+
+_Fórmula de la media y varianza para V.A. discretas_
+
+$$\mu=\frac{\sum_{i=1}^nx_i}{N}$$
+
+$$\sigma^2=\frac{\sum_{i=1}^n(x_i-\mu)^2}{N}$$
+
+__Distribución Muestral__
+
+Al tomar tamaños de muestra $n=30$ se tiene
+
+```{r}
+
+x1<-rep(NA, 5000)
+
+n<-30
+for (i in 1:5000){
+x1[i]<-mean(sample(unifor, n, replace=FALSE))
+}
+
+hist(x1)
+
+st1<-shapiro.test(x1)
+jbt1<-jarque.bera.test(x1)
+
+```
+
+__Se hace prueba para la normalidad__
+
+$H_0:$ La V.A. se distribuye de forma normal
+
+$H_A:$ La V.A. no se dist. de forma normal
+
+Como el valor $p=$ `r st1$p.value` que es mayor a $\alpha=.05$ no existe suficiente evidencia para rechazar $H_0$ por lo tanto podemos asumir normalidad de la medias de las muestras.
+
+__La conclusión de este ejemplo empírico, es que no importa de que dsitribución provengan las muestras, las medias de las muestras se comportarán como una distribucíón normal a medida que el tamaño de la muestar aumenta__
+
+Para poner a prueba al estadístico de Shapiro-Wilks hagamos la prueba para la variable aleatoria uniforme
+
+```{r}
+
+jarque.bera.test(unifor)
+
+```
+
+Lo que nos indica que no se comporta como una V.A. con distribución normal.
+
+__¿Cuál es el valor de la media de las medias?__
+
+```{r}
+mean(x1)
+```
+
+Se observa que aunque no es igual al valor de la media poblacional de la distribución rectangular `r munif`, es muy cercana, de hecho y de haber encontrado todas las combinaciones de N tomadas n a la vez el valor sería idéntico. Lo que significa que:
+
+$$\bar{\bar{X}}=\mu$$
+#Estimación Puntual
+
+Si seleccionamos a una de las X1 que generamos, a cualquiera de ellas, sería un estimador puntual $\mu$. Por ejemplo:
+
+```{r}
+
+x1[sample(1:5000, 1)]
+
+```
+
+Si alguien hiciera el estudio y tomara otra muestra de 3o elementos podría obtener
+
+```{r}
+
+x1[sample(1:5000, 1)]
+
+```
+
+__¿A quién le cree usted, suponiendo que no conoce los parámetros poblacionales?__
+
+Pues a todos y a ninguno, ya que fueron sacados de una distribución muestral de tamaño 30 pero la probabilidad de que sean igual al parámetro poblacional es casi seguramente cero.
+
+#Intervalos de confianza
+
+Si tomamos nuevamente una muestra de 30 elementos y calculamos su media, pero a diferencia de la estimación puntual a esta le colocamos un Límite Inferior y un Límite Superior con una probabilidad de que el parámetro real pero desconocido se encuentre en dicho intervalo.
+
+$$LI=\bar{x}-z_{\alpha/2}\sigma_{\bar{x}}$$
+
+$$LI=\bar{x}+z_{\alpha/2}\sigma_{\bar{x}}$$
+
+Se hace conveniente explicar el concepto de error estándar $\sigma_{\bar{x}}$. El error estándar es el equivalente a la desviación estándar pero este es un parámetro de la medida de dispersión de las distribuciones muestrales, la cual también se puede obtener de la siguiente manera:
+
+$$\sigma_{\bar{x}}=\frac{\sigma}{\sqrt{n}}$$
+
+El dilema al que nos enfrentamos ahora es que para tener el intervalo de confianza se emplea $\sigma$ quien es un parámetro poblacional, por lo que es necesario encontrar un estimador de $\sigma^2$
+
+$$\hat{\sigma}^2=s^2$$
+
+Un estimador de $\sigma^2_{\bar{x}}$ es $S^2_{\bar{x}}$. Por la tanto 
+
+$$S^2_{\bar{x}}=\frac{S^2}{n}$$
+
+Para nuestro caso
+
+```{r}
+
+xm<-sample(unifor, 30, replace=FALSE)
+xp<-mean(xm)
+s<-sd(xm)
+sx<-s/n^.5
+z<-qnorm(0.975)
+
+LI<-xp-z*sx
+LS<-xp+z*sx
+LI
+LS
+munif
+require(plotrix)
+plotCI(xp, ui=LS, li=LI)
+
+```
+
+Con lo que se aprecia que la media poblacional está contenida en el intervalo de confianza.
+
+Hagamos el experimento con diez muestras de tamaño 30.
+
+```{r}
+
+mi<-rep(NA, times=10*30)
+dim(mi)<-c(10, 30) 
+
+for (i in 1:10){
+  mi[i,]<-sample(unifor,30, replace=FALSE)
+}
+
+mmi<-apply(mi, 1, mean)
+sdmi<-apply(mi, 1, sd)
+
+LIi<-mmi-z*sdmi
+LSi<-mmi+z*sdmi
+
+plotCI(mmi, ui=LSi, li=LIi)
+abline(h=munif)
+
+```
+
+#Muestreo
+
+La fórmula que comúnmente se emplea para el muestreo es 
+
+$$n=\frac{\sigma^2N}{(N-1)D^2+\sigma^2}$$
+
+$$D=\frac{B}{z_{\alpha/2}}$$
+
+Donde:
+
+- B = Error de Muestreo
+
+- $z_{\alpha/2}$ = Nivel de significancia
+
+- $\sigma^2$ = Varianza poblacional
+
+- n = Tamaño de la población
+
+Sin embargo, se deberá estimar a $\sigma^2$ con $S^2$.
+Por lo que: 
+
+$$n=\frac{S^2N}{(N-1)D^2+S^2}$$
+
+Ejemplo:
+
+Para nuestro caso de la distribución rectangular, suponga que deseamos un error de $\pm1$ un nivel de significancia $\alpha=.05$, el tamaño de la población es N=10,000 elementos y un muestreo piloto con 30 elementos arrojo una varianza muestral de 120.23. Calcule el tamaño de la muestra.
+
+```{r}
+
+s2<-120.23
+N<-10000
+B=1
+D=B/z
+
+n<-s2*N/((N-1)*D^2+s2)
+ceiling(n)
+
+```
+
+¿Qué pasa si se duplica al error, B=2?
+
+```{r}
+
+s2<-120.23
+N<-10000
+B=2
+D=B/z
+
+n<-s2*N/((N-1)*D^2+s2)
+ceiling(n)
+
+```
+
+¿Qué pasa si se reduce el error de B=1 a B=0.5?
+
+```{r}
+
+s2<-120.23
+N<-10000
+B=.5
+D=B/z
+
+n<-s2*N/((N-1)*D^2+s2)
+ceiling(n)
+
+```
+
+¿Qué pasa si el nivel de significancia pasa de .05 a .01?
+
+```{r}
+
+s2<-120.23
+N<-10000
+B=2
+za<-qnorm(.995)
+D=B/za
+
+n<-s2*N/((N-1)*D^2+s2)
+ceiling(n)
+
+```
+
+¿Qué pasa si el nivel de significancia pasa de .05 a .1?
+
+```{r}
+
+s2<-120.23
+N<-10000
+B=2
+za<-qnorm(.95)
+D=B/za
+
+n<-s2*N/((N-1)*D^2+s2)
+ceiling(n)
+
+```
+
+Es más sensible el tamaño de la muestra al error que al nivel de significancia $\alpha$.
+
+#Pruebas de Hipótesis
+
+Una prueba de hipótesis es un supuesto que debe ser comprobado estadísticamente. Un supuesto es una aseveración sobre algo.
+
+Por ejemplo podría suponer que la media de la población de nuestro caso es de 27.5 por lo que se tiene que plantear dos hipótesis, la nula y la alternativa.
+
+$H_0:~\mu=27.5$
+
+$H_A:~\mu\neq27.5$
+
+Se tomo una muestra de un tamaño lo suficientemente grande para verificar el supuesto. Se procede de la siguiente manera.
+
+```{r}
+
+n<-40
+
+m1<-sample(unifor, 40, replace=FALSE)
+
+mm1<-mean(m1)
+
+sdm1<-sd(m1)
+
+
+```
+
+Se debe tener un estadístico de prueba, se puede usar la t de student
+
+$$t=\frac{\bar{x}-\mu_0}{S_{\bar{x}}}$$
+```{r}
+
+ts<-(mm1-27.5)/(sdm1/n^.5)
+
+qt(.975, 39)
+
+```
+
+Sin embargo se pueden cometer el Error tipo I y el Error tipo II
+
