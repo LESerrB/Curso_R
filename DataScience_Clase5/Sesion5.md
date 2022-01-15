@@ -166,3 +166,23 @@ NN2 <- neuralnet(
 )
 plot(NN2, res = "best")
 ```
+
+## **Bibliografía y referencias**
+
+## **Libros**
+
+### **Deep Learning with R**
+
+Escrito por el creador de Keras y el creador de Keras en R, es el libro perfecto para introducirse a conceptos de deep learning y usar ejemplos en R.
+
+[](https://www.amazon.com/Deep-Learning-R-Francois-Chollet/dp/161729554X)
+
+### **Deep Learning in R**
+
+[Deep Learning with R | Abhijit Ghatak | Springer](https://www.springer.com/gp/book/9789811358494)
+
+### **The Deep Learning Books**
+
+Este libro es la biblia del deep learning. Es una lectura mucho mas formal, extensa y agnóstico de lenguajes. Si quieren de verdad aprender esta ciencia, deben leer esto:
+
+[Deep Learning](https://www.deeplearningbook.org/)
